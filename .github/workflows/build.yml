@@ -35,11 +35,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Gradle
+      - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.4
       - name: Create wrapper
         run: |
-          if [ ! -f "./gradlew" ]; then gradle wrapper --gradle-version 8.4; fi
+          gradle wrapper --gradle-version 8.4
           chmod +x gradlew
       - name: Build AAB
         run: ./gradlew bundleRelease
