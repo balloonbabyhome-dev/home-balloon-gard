@@ -9,10 +9,6 @@ jobs:
         run: |
           unzip -o HomeBalloon.zip
           ls -la
-          if [ -d "HomeBalloonApp" ]; then mv HomeBalloonApp/* .; fi
-          if [ -f "homeballoon.jks" ]; then echo "keystore exists"; fi
-          ls -la
-          ls -la app || true
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -20,10 +16,11 @@ jobs:
           java-version: '17'
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
       - name: Build AAB
         run: |
-          chmod +x gradlew || true
-          ./gradlew bundleRelease || gradle bundleRelease
+          gradle bundleRelease
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
