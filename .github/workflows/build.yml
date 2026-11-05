@@ -5,24 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
+      - name: Unzip and prepare
         run: |
           rm -rf app/build .gradle
           unzip -o HomeBalloon.zip
           ls -la
-      - name: Fix build.gradle
+          # لو الملفات جوه مجلد - طلعها بره
+          if [ -d "HomeBalloonApp" ]; then mv HomeBalloonApp/* .; mv HomeBalloonApp/.* . 2>/dev/null || true; fi
+          if [ -d "HomeBalloon" ]; then mv HomeBalloon/* .; mv HomeBalloon/.* . 2>/dev/null || true; fi
+          ls -la
+      - name: Fix gradle files
         run: |
           printf "buildscript {\n  ext.kotlin_version='1.9.0'\n  repositories { google(); mavenCentral() }\n  dependencies { classpath 'com.android.tools.build:gradle:8.1.0'; classpath \"org.jetbrains.kotlin:kotlin-gradle-plugin:\$kotlin_version\" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n" > build.gradle
-      - name: Fix gradle.properties
-        run: |
-          echo "android.useAndroidX=true" >> gradle.properties
+          echo "android.useAndroidX=true" > gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
           echo "org.gradle.jvmargs=-Xmx4096m" >> gradle.properties
+          cat build.gradle
           cat gradle.properties
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Setup Gradle 8.4
-        uses: gradle/actions/setup-gradle@v3
+        uses:
