@@ -9,6 +9,11 @@ jobs:
         run: |
           unzip -o HomeBalloon.zip
           ls -la
+      - name: Clean old build
+        run: |
+          rm -rf app/build build .gradle
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          cat local.properties
       - name: Fix build.gradle
         run: |
           cat > build.gradle << 'EOF'
@@ -44,9 +49,6 @@ jobs:
           gradle wrapper --gradle-version 8.4
           chmod +x gradlew
       - name: Build AAB
-        run: ./gradlew bundleRelease --stacktrace
+        run: ./gradlew clean bundleRelease --stacktrace
       - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-aab
-          path: app/build/outputs/bundle/release/*.aab
+        uses: actions/upload
