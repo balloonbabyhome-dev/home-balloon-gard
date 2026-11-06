@@ -10,11 +10,9 @@ jobs:
           rm -rf app/build .gradle
           if [ -f "HomeBalloon_Full.zip" ]; then unzip -o HomeBalloon_Full.zip; fi
           if [ -f "HomeBalloon.zip" ]; then unzip -o HomeBalloon.zip; fi
-          # Handle nested folder - move contents to root if app is inside subfolder
           if [ ! -d "app" ]; then
             for d in HomeBalloon_Full HomeBalloon home-balloon-gard */; do
               if [ -d "$d/app" ]; then
-                echo "Found app in $d - moving to root"
                 mv $d/* . 2>/dev/null || true
                 mv $d/.* . 2>/dev/null || true
                 break
@@ -22,7 +20,6 @@ jobs:
             done
           fi
           ls -la
-          ls -la app/src/main/res/values/ || true
       - name: Fix build.gradle repositories
         run: |
           cat > build.gradle <<'ENDOFFILE'
@@ -45,6 +42,12 @@ jobs:
           }
           ENDOFFILE
           cat build.gradle
+      - name: Fix gradle.properties AndroidX
+        run: |
+          echo "android.useAndroidX=true" > gradle.properties
+          echo "android.enableJetifier=true" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
+          cat gradle.properties
       - name: Fix theme error
         run: |
           if [ -f "app/src/main/res/values/themes.xml" ]; then
