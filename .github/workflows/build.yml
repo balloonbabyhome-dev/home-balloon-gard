@@ -1,4 +1,4 @@
-name: Build AAB API36 Fixed
+name: Build AAB API36 NoSign
 on: workflow_dispatch
 jobs:
   build:
@@ -15,8 +15,7 @@ jobs:
               if [ -d "$d/app" ]; then mv $d/* . 2>/dev/null || true; break; fi
             done
           fi
-          ls -la
-      - name: Fix all files correctly
+      - name: Fix API36 only
         run: |
           cat > build.gradle <<'ENDOFFILE'
           buildscript {
@@ -31,27 +30,19 @@ jobs:
           ENDOFFILE
           echo "android.useAndroidX=true" > gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
           sed -i 's/Theme.MaterialComponents.DayNight.Light/Theme.MaterialComponents.DayNight/g' app/src/main/res/values/themes.xml || true
           python3 <<'PY'
           import pathlib, re
           p = pathlib.Path("app/build.gradle")
           txt = p.read_text()
-          txt = txt.replace("compileSdk 34", "compileSdk 36")
+          print('BEFORE:')
+          print(txt)
+          txt = txt.replace(
+              "compileSdk 34", "compileSdk 36")
           txt = txt.replace("targetSdk 34", "targetSdk 36")
           txt = re.sub(r"versionCode \d+", "versionCode 2", txt)
-          if "signingConfigs" not in txt:
-              sb = "    signingConfigs {\n"
-              sb += "        release {\n"
-              sb += "            storeFile file(\"../homeballoon.jks\")\n"
-              sb += "            storePassword \"HomeBalloon2024@\"\n"
-              sb += "            keyAlias \"homeballoon\"\n"
-              sb += "            keyPassword \"HomeBalloon2024@\"\n"
-              sb += "        }\n"
-              sb += "    }\n"
-              txt = txt.replace("android {", "android {\n" + sb, 1)
-              txt = txt.replace("release {", "release {\n            signingConfig signingConfigs.release", 1)
           p.write_text(txt)
+          print('AFTER:')
           print(txt)
           PY
       - name: Set up JDK 17
@@ -63,13 +54,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.9
-      - name: Build Signed AAB API36
+      - name: Build AAB
         run: |
           gradle wrapper --gradle-version 8.9
           chmod +x gradlew
           ./gradlew clean bundleRelease --stacktrace
-      - name: Upload Signed AAB
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-aab-api36-signed
+          name: app-release-aab-api36
           path: app/build/outputs/bundle/release/*.aab
